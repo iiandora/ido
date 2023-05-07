@@ -71,7 +71,7 @@ wstring makeupper(const wstring& str)
 }
 
 
-bool wstrfind(wstring& iput, wstring& str)
+bool wstrfind(wstring& iput, wstring str)
 {
 	if (str.empty()) { return false; }
 	wstring si = makelower(iput);
@@ -80,13 +80,40 @@ bool wstrfind(wstring& iput, wstring& str)
 	return false;
 }
 
-wstring wstrbt(wstring src, wstring& s1, wstring& s2)
+
+wstring wstrgetbefore(wstring &src, wstring s1)
+{
+	wstring str = L"";
+	size_t f1;
+	f1 = src.find(s1);
+	if (f1 != wstring::npos)
+	{
+		str = src.substr(0,f1);
+		
+	}
+	return str;
+}
+
+wstring wstrgetend(wstring src, wstring s1)
+{
+	wstring str = L"";
+	size_t f1;
+	f1 = src.find(s1);
+	if (f1 != wstring::npos)
+	{
+		str = src.substr(f1+ s1.length());
+
+	}
+	return str;
+}
+
+wstring wstrbt(wstring src, wstring s1, wstring s2)
 {
 	wstring str = L"";
 	size_t f1;
 	size_t f2;
-	int len1 = s1.length();
-	int len2 = s2.length();
+	size_t len1 = s1.length();
+	size_t len2 = s2.length();
 	f1 = src.find(s1);
 	if (f1 != wstring::npos)
 	{
@@ -96,8 +123,59 @@ wstring wstrbt(wstring src, wstring& s1, wstring& s2)
 		}
 	}
 	return str;
-
 }
+
+wstring wfindbtstr(wstring& s, wstring sa,wstring sb,wstring &sf,wstring &split)
+{
+	wstring str = s;
+	size_t f1;
+	size_t f2;	
+	size_t lena = sa.length();
+	size_t lenb = sb.length();
+	while (1)
+	{
+		f1 = str.find(sa);
+		if (f1 == wstring::npos) { break; }
+		f2 = str.find(sb, f1 + lena);
+		if (f2 == wstring::npos) {
+			break;
+		}
+		else
+		{
+			sf += str.substr(f1 + lena, f2 - f1 - lena) +split;
+		}
+		str.erase(f1, f2 - f1+lenb);
+	}
+	return str;
+}
+
+
+void wfindstr2vec(wstring& s, wstring sa,wstring sb, std::vector<std::wstring>& vec_data,wstring &sl)
+{
+	wstring str = s;
+	size_t f1;
+	size_t f2;	
+	size_t lena = sa.length();
+	size_t lenb = sb.length();
+	while (1)
+	{
+		f1 = str.find(sa);
+		if (f1 == wstring::npos) { break; }
+		f2 = str.find(sb, f1 + lena);
+		if (f2 == wstring::npos) {
+			break;
+		}
+		else
+		{
+			vec_data.push_back(str.substr(f1 + lena, f2 - f1 - lena) );			
+		}
+		str.erase(f1, f2 - f1+lenb);
+	}
+	sl = str;
+}
+
+
+
 
 wstring wremovestr(wstring s1, wstring s2)
 {
@@ -115,16 +193,18 @@ wstring wremovestr(wstring s1, wstring s2)
 }
 
 
-void wreplace(wstring& target, const wstring& find, const wstring& replace)
+wstring  wreplace(wstring& target, const wstring& find, const wstring& replace)
 {
+	wstring _str = target;
 	const wstring::size_type find_len = find.length();
 	const wstring::size_type replace_len = replace.length();
 	wstring::size_type pos = 0;
-	while ((pos = target.find(find, pos)) != wstring::npos)
+	while ((pos = _str.find(find, pos)) != wstring::npos)
 	{
-		target.replace(pos, find_len, replace);
+		_str.replace(pos, find_len, replace);
 		pos += replace_len;
 	}
+	return _str;
 }
 
 wstring wremovechar(wstring s1, wstring s2)
@@ -234,34 +314,6 @@ wstring trim_ws(const wstring& str)
 }
 
 
-wstring trim_ws_xhx(const wstring& str)
-{
-	if (str.empty())
-		return str;
-
-	wstring result(str);
-	wstring::iterator it = result.begin();
-	while (it != result.end() && (*it) == L'_')
-		++it;
-
-	if (it != result.begin())
-		result.erase(result.begin(), it);
-
-	if (result.empty())
-		return result;
-
-	it = result.end() - 1;
-	while (it != result.begin() && (*it) == L'_')
-		--it;
-
-	if (it != result.end() - 1)
-		result.erase(it + 1, result.end());
-	return result;
-}
-
-
-
-
 wstring wgetFileName(wstring& s)
 {
 	size_t found;
@@ -275,6 +327,7 @@ wstring wgetFileName(wstring& s)
 	}
 }
 
+/* include '.' */
 wstring wgetFileType(wstring& s)
 {
 	size_t found;
@@ -293,7 +346,7 @@ wstring wdir(wstring& s)
 {
 	wstring sok = L"";
 	int i = 0;
-	int len = s.length();
+	size_t len = s.length();
 	for (;i < len;i++)
 	{
 		if (s[i] >= 0X30 && s[i] <= 0X7A)
@@ -309,7 +362,7 @@ wstring walnum(wstring& s)
 {
 	wstring sok = L"";
 	int i = 0;
-	int len = s.length();
+	size_t len = s.length();
 	for (;i < len;i++)
 	{
 		//locale dep
@@ -321,11 +374,12 @@ wstring walnum(wstring& s)
 	return sok;
 }
 
+
 wstring walpha(wstring& s)
 {
 	wstring sok = L"";
 	int i = 0;
-	int len = s.length();
+	size_t len = s.length();
 	for (;i < len;i++)
 	{
 		//locale dep
@@ -485,18 +539,21 @@ void wlog(wstring sf, wstring str, int atime = 0)
 }
 
 
-void logrn(wstring& s, wstring& des)
+int logrn(wstring& s, wstring& des)
 {
 	int irn = _trename(s.c_str(), des.c_str());
 	if (irn != 0)
 	{
 		wchar_t buf[1024];
 		_tcserror_s(buf, 1024, errno);
-		wlog(L"err.txt", wstring(buf) + L"\r\n" + s + L"*" + des);
+		wlog(L"err.txt", wstring(buf) + L"\r\n" + s + L"*" + des); 
+		return 0;
 	}
 	else {
-		wlog(L"ok.txt", s + L"*" + des);
+		wlog(L"ok.txt", s + L"*" + des); 
+		return 1;
 	}
+	
 }
 
 
@@ -514,6 +571,20 @@ void rdolog(wstring& s, wstring& des)
 	}
 }
 
+
+void logrnvec(vector<std::wstring>& vs)
+{
+	size_t ivsz = vs.size();
+	if (ivsz > 0)
+	{
+		for (size_t i = 0; i < ivsz; i = i + 2)
+		{			
+			logrn(vs[i], vs[i + 1]);
+		}
+	}
+	vs.clear();
+
+}
 
 
 
